@@ -22,3 +22,31 @@ steps:
     contents: '**'
     targetFolder: '/deploy'
     readyTimeout: '20000'
+- task: SSH@0
+  inputs:
+    sshEndpoint: 'DEV'
+    runOptions: 'inline'
+    inline: |
+      #Unit Testing
+      echo "unit testing started"
+      if grep 'Fatel' /deploy/index.html; then
+       echo "Test is failed in following number of line"
+       sed -n '/Fatel/=' /deploy/index.html
+       exit 1
+      fi
+      
+      echo "Test is Successful"
+    readyTimeout: '20000'
+- task: SSH@0
+  inputs:
+    sshEndpoint: 'DEV'
+    runOptions: 'inline'
+    inline: |
+      cd /var/www/
+       sudo rm -rf html
+      cd /var/www/deployments/
+      sudo mkdir Dev-$(Build.BuildId)
+      sudo cp -r /deploy/* /var/www/deployments/Dev-$(Build.BuildId)
+      cd /var/www/
+       sudo ln -s deployments/Dev-$(Build.BuildId) html
+    readyTimeout: '20000'
